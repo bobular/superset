@@ -232,7 +232,22 @@ services:
 volumes:
   superset_home:
     external: false
+    driver: local
+    driver_opts:
+      type: none
+      device: /data/docker-vols/superset_home
+      o: bind
   db_home:
     external: false
+    driver: local
+    driver_opts:
+      type: none
+      device: /data/docker-vols/db_home
+      o: bind
   redis:
     external: false
+    driver: local
+    driver_opts:
+      type: none
+      device: /data/docker-vols/redis
+      o: bind
