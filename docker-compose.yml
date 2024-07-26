@@ -36,6 +36,8 @@ x-superset-volumes: &superset-volumes
 x-common-main-image: &common-image 085460822501.dkr.ecr.eu-west-2.amazonaws.com/fieldtrialboss-superset:latest
 x-common-ws-image: &ws-image 085460822501.dkr.ecr.eu-west-2.amazonaws.com/fieldtrialboss-superset-websocket:latest
 
+name: fieldtrialboss
+
 services:
   nginx:
     image: nginx:latest
