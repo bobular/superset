@@ -33,26 +33,24 @@ x-superset-volumes: &superset-volumes
   - superset_home:/app/superset_home
   - ./tests:/app/tests
 
-x-common-build: &common-build
-  context: .
-  target: dev
-  cache_from:
-    - apache/superset-cache:3.10-slim-bookworm
+x-common-main-image: &common-image 085460822501.dkr.ecr.eu-west-2.amazonaws.com/fieldtrialboss-superset:latest
+x-common-ws-image: &ws-image 085460822501.dkr.ecr.eu-west-2.amazonaws.com/fieldtrialboss-superset-websocket:latest
 
 services:
   nginx:
     image: nginx:latest
-    container_name: superset_nginx
+    # container_name: superset_nginx
     restart: unless-stopped
     ports:
       - "80:80"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
   redis:
     image: redis:7
-    container_name: superset_cache
+    # container_name: superset_cache
     restart: unless-stopped
     ports:
       - "127.0.0.1:6379:6379"
@@ -66,7 +64,7 @@ services:
       - path: docker/.env-local # optional override
         required: false
     image: postgres:15
-    container_name: superset_db
+    # container_name: superset_db
     restart: unless-stopped
     ports:
       - "127.0.0.1:5432:5432"
@@ -80,9 +78,7 @@ services:
         required: true
       - path: docker/.env-local # optional override
         required: false
-    build:
-      <<: *common-build
-    container_name: superset_app
+    image: *common-image
     command: ["/app/docker/docker-bootstrap.sh", "app"]
     restart: unless-stopped
     ports:
@@ -96,8 +92,8 @@ services:
       CYPRESS_CONFIG: "${CYPRESS_CONFIG:-}"
 
   superset-websocket:
-    container_name: superset_websocket
-    build: ./superset-websocket
+    # container_name: superset_websocket
+    image: *ws-image
     ports:
       - 8080:8080
     extra_hosts:
@@ -129,9 +125,7 @@ services:
       - REDIS_SSL=false
 
   superset-init:
-    build:
-      <<: *common-build
-    container_name: superset_init
+    image: *common-image
     command: ["/app/docker/docker-init.sh"]
     env_file:
       - path: docker/.env # default
@@ -152,7 +146,7 @@ services:
       # set this to false if you have perf issues running the npm i; npm run dev in-docker
       # if you do so, you have to run this manually on the host, which should perform better!
       SCARF_ANALYTICS: "${SCARF_ANALYTICS:-}"
-    container_name: superset_node
+    # container_name: superset_node
     command: ["/app/docker/docker-frontend.sh"]
     env_file:
       - path: docker/.env # default
@@ -163,9 +157,7 @@ services:
     volumes: *superset-volumes
 
   superset-worker:
-    build:
-      <<: *common-build
-    container_name: superset_worker
+    image: *common-image
     command: ["/app/docker/docker-bootstrap.sh", "worker"]
     env_file:
       - path: docker/.env # default
@@ -187,9 +179,7 @@ services:
     # mem_reservation: 128M
 
   superset-worker-beat:
-    build:
-      <<: *common-build
-    container_name: superset_worker_beat
+    image: *common-image
     command: ["/app/docker/docker-bootstrap.sh", "beat"]
     env_file:
       - path: docker/.env # default
@@ -204,9 +194,7 @@ services:
       disable: true
 
   superset-tests-worker:
-    build:
-      <<: *common-build
-    container_name: superset_tests_worker
+    image: *common-image
     command: ["/app/docker/docker-bootstrap.sh", "worker"]
     env_file:
       - path: docker/.env # default
